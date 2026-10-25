@@ -23,7 +23,7 @@
 - `dist/healthcheck.js` برای healthcheck داکر (پورت از argv، بدون خواندن env)
 - `Dockerfile` چندمرحله‌ای روی `node:24-slim` (LTS فعلی؛ سند حداقل ۲۲ خواسته)، مرحله نهایی فقط dist + prod deps، کاربر `node`، `NODE_OPTIONS=--max-old-space-size=192`
 - `docker-compose.yml` مطابق بخش ۱۷: بدون `ports:`، `read_only`، tmpfs، `mem_limit: 256m`، volume رسانه، mount فقط‌خواندنی مهاجرت‌های store، healthcheck، لاگ json-file؛ شبکه external با `${DOCKER_NETWORK}`
-- CI (GitHub Actions): `npm ci`، lint، typecheck، vitest با سرویس MySQL 8، `test:boundaries`، build ایمیج داکر
+- CI (GitHub Actions): `npm ci`، lint، typecheck، vitest با سرویس MySQL 8، `test:boundaries`، build ایمیج داکر؛ job دوم `publish` بعد از سبز شدن همهٔ چک‌ها ایمیج را به ghcr.io منتشر می‌کند (فقط push به `main` یا تگ `v*`؛ PR هرگز منتشر نمی‌کند)
 
 پذیرش فاز ۰:
 
@@ -53,16 +53,17 @@
 
 ## اجرا روی VPS (برای مالک)
 
-```bash
-# build و publish ایمیج
-docker build -t nadstore-core:<git-sha> .
+بیلد دستی روی سرور لازم نیست: هر push به `main` بعد از سبز شدن تست‌ها ایمیج را در ghcr.io منتشر می‌کند و روی سرور فقط pull و اجرا انجام می‌شود.
 
-# قبل از اولین اجرا: بوت‌استریپ دستی دیتابیس (بخش ۵ سند — کار مالک است)
-# سپس داخل کانتینر:
-docker compose up -d core
-docker compose exec core node dist/main.cli.js migrate:registry
-curl -s https://api.nadstore.ir/health   # → {"status":"ok"}
+```bash
+docker compose pull
+docker compose run --rm core node dist/main.cli.js migrate:registry --dry-run
+docker compose run --rm core node dist/main.cli.js migrate:registry
+docker compose up -d
+docker compose ps   # STATUS باید healthy شود
 ```
+
+پیش‌نیازهای یک‌باره (دسترسی پکیج ghcr، لاگین، `.env` کامل، بوت‌استریپ دستی دیتابیس طبق بخش ۵ سند و rollback): راهنمای کامل در **`DEPLOY.md`**.
 
 ## سیاست تست
 

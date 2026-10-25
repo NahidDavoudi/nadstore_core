@@ -2,11 +2,14 @@
 # - no published ports: the container is only visible inside the existing
 #   Docker network; Nginx proxies to core:3000
 # - read-only root filesystem, tmpfs for /tmp, hard memory cap
+# On the VPS set CORE_IMAGE in .env to the published GHCR image, e.g.:
+#   CORE_IMAGE=ghcr.io/<owner>/<repo>
+#   CORE_TAG=latest            (or sha-<hash> / a semver tag for rollback)
 # Set DOCKER_NETWORK to the existing network that hosts MySQL and Nginx,
 # and SHOP_MIGRATIONS_HOST_DIR to the store (PHP) migrations path on the host.
 services:
   core:
-    image: nadstore-core:${CORE_TAG:-latest}
+    image: ${CORE_IMAGE:-nadstore-core}:${CORE_TAG:-latest}
     restart: unless-stopped
     env_file: .env
     read_only: true
