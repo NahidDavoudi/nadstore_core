@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+.git
+.env
+test
+scripts
+.github
+*.log
+PROGRESS.md
+QUESTIONS.md
+DECISIONS.md

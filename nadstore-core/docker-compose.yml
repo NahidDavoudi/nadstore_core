@@ -1,0 +1,38 @@
+# Runtime composition (architecture document, section 17).
+# - no published ports: the container is only visible inside the existing
+#   Docker network; Nginx proxies to core:3000
+# - read-only root filesystem, tmpfs for /tmp, hard memory cap
+# Set DOCKER_NETWORK to the existing network that hosts MySQL and Nginx,
+# and SHOP_MIGRATIONS_HOST_DIR to the store (PHP) migrations path on the host.
+services:
+  core:
+    image: nadstore-core:${CORE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 256m
+    volumes:
+      - media_data:/data/media
+      - ${SHOP_MIGRATIONS_HOST_DIR:-./shop-migrations}:/app/shop-migrations:ro
+    healthcheck:
+      test: ["CMD", "node", "dist/healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - nadstore
+
+networks:
+  nadstore:
+    name: ${DOCKER_NETWORK:-nadstore}
+    external: true
+
+volumes:
+  media_data:
