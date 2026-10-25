@@ -18,7 +18,7 @@ describe.skipIf(mysqlEnv === null)('registry — tenant insert/read with encrypt
 
   beforeAll(async () => {
     env = mysqlEnv as MysqlTestEnv;
-    const dbName = 'nad_registry_test';
+    const dbName = 'nad_registry_repos_test';
     await recreateDatabase(env, dbName);
     const config = testConfig({
       REGISTRY_DB_NAME: dbName,
